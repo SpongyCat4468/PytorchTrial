@@ -59,7 +59,7 @@ loss_fn = nn.MSELoss()
 
 print("Starting training...")
 
-epochs = 420
+epochs = 1000
 for epoch in range(epochs):
     y_hat = model(X)
     loss = loss_fn(y_hat, Y)
