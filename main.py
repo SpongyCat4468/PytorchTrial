@@ -1,13 +1,20 @@
-# PYTORCH IMPLEMENTATION OF LINEAR REGRESSION USING nn.Module, nn.MSELoss, AND optim.Adam (Professional)
 import torch.nn as nn
 import torch.optim as optim
 import torch
+import time
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+time1 = time.time()
 
 learning_rate = 0.01
-X = torch.randn(10, 1)
-true_W = torch.tensor([[2.0]])
-true_b = torch.tensor([1.0])
-Y = X @ true_W + true_b # + 0.1 * torch.randn(N, D_out) (noise)
+
+# Move tensors to device
+X = torch.randn(10, 1).to(device)
+true_W = torch.tensor([[2.0]]).to(device)
+true_b = torch.tensor([1.0]).to(device)
+Y = X @ true_W + true_b
 
 class LinearRegressionModel(nn.Module):
     def __init__(self, in_features, out_features):
@@ -16,10 +23,11 @@ class LinearRegressionModel(nn.Module):
 
     def forward(self, x):
         return self.linear_layer(x)
-model = LinearRegressionModel(1, 1)
+
+# Move model to device
+model = LinearRegressionModel(1, 1).to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate) 
-    
 loss_fn = nn.MSELoss()
 
 print("Starting training...")
@@ -36,3 +44,5 @@ for epoch in range(epochs):
     if (epoch + 1) % 10 == 0:
         W, b = model.linear_layer.weight.item(), model.linear_layer.bias.item()
         print(f'Epoch {epoch + 1}: loss = {loss.item()}, W = {W:.3f}, b = {b:.3f}')
+
+print(f"Training complete. Completed in {time.time() - time1:.2f} seconds.")

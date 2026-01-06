@@ -4,22 +4,19 @@ import torch
 
 learning_rate = 0.01
 
-# Your data
+# data
 angles = [0, 0.174532925, 0.34906585, 0.523598776, 0.698131701, 0.872664626, 1.047197551, 1.221730476, 1.396263402, 1.570796327]
 voltages = [5.2264, 5.1709, 5.0379, 5.0147, 4.7384, 4.071, 3.619, 2.679, 1.3579, 0.3957]
 
-# Convert to tensors and reshape
 X = torch.tensor(angles, dtype=torch.float32).reshape(-1, 1)
 Y = torch.tensor(voltages, dtype=torch.float32).reshape(-1, 1)
 
 class VoltageAngleModel(nn.Module):
     def __init__(self):
         super().__init__()
-        # We'll use a linear layer on cos(angle)
         self.linear_layer = nn.Linear(1, 1)
 
     def forward(self, x):
-        # Apply cosine transformation before linear layer
         cos_x = torch.cos(x)
         return self.linear_layer(cos_x)
 
