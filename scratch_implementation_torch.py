@@ -28,7 +28,8 @@ for epoch in range(epochs):
 
     W.grad.zero_()
     b.grad.zero_()
-    
+
+# y = a * x
 
 print(f'Final parameters: W = {W.item():.3f}, b = {b.item():.3f}')
 print(f'True parameters: W = {true_W.item():.3f}, b = {true_b.item():.3f}')
