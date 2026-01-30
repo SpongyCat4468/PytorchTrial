@@ -37,17 +37,17 @@ X_test_sorted = X_test[test_sort_idx]
 Y_test_sorted = Y_test[test_sort_idx]
 
 # Plot predictions function
-def plot_predictions(train_data=X_train_sorted,
-                     train_labels=Y_train_sorted,
-                     test_data=X_test_sorted,
-                     test_labels=Y_test_sorted,
+def plot_predictions(train_input=X_train_sorted,
+                     train_output=Y_train_sorted,
+                     test_input=X_test_sorted,
+                     test_output=Y_test_sorted,
                      predictions=None):
     plt.figure(figsize=(12, 7))
-    plt.scatter(train_data.cpu(), train_labels.cpu(), c="b", s=4, alpha=0.6, label="Training data")
-    plt.scatter(test_data.cpu(), test_labels.cpu(), c="g", s=4, alpha=0.6, label="Testing data")
+    plt.scatter(train_input.cpu(), train_output.cpu(), c="b", s=4, alpha=0.6, label="Training data")
+    plt.scatter(test_input.cpu(), test_output.cpu(), c="g", s=4, alpha=0.6, label="Testing data")
 
     if predictions is not None:
-        plt.scatter(test_data.cpu(), predictions.cpu(), c="r", s=4, alpha=0.8, label="Predictions")
+        plt.scatter(test_input.cpu(), predictions.cpu(), c="r", s=4, alpha=0.8, label="Predictions")
 
     plt.legend(prop={"size": 14})
     plt.title("Polynomial Regression with Random Train/Test Split")
@@ -170,8 +170,9 @@ from pathlib import Path
 MODEL_PATH = Path("models")
 MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
-MODEL_NAME = "02_polynomial.pt" #common file type -> .pt / .pth
+MODEL_NAME = "01_polynomial.pt" #common file type -> .pt / .pth
 MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
 
 if (input("save (y/n)").lower() == "y"):
-    torch.save(model.state_dict(), MODEL_SAVE_PATH)
+    torch.save(best_model_state, MODEL_SAVE_PATH)
+    
