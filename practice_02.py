@@ -58,3 +58,67 @@ class CircleModel(nn.Module):
 
 model = CircleModel().to(device)
 
+
+predictions = model(X_test.to(device))
+
+'''
+print(predictions[:10])
+print(y_test[:10])
+>-------<
+tensor([[0.0388],
+        [0.0241],
+        [0.0511],
+        [0.0387],
+        [0.3365],
+        [0.3404],
+        [0.1965],
+        [0.2550],
+        [0.0446],
+        [0.0234]], device='cuda:0', grad_fn=<SliceBackward0>)
+tensor([1., 0., 1., 0., 1., 1., 0., 0., 1., 0.])
+'''
+# For regression: MAE or MSE loss (L1Loss or MSELoss)
+# For classification: binary cross entropy loss (BCELoss) or categorical cross entropy 
+loss_fn = nn.BCEWithLogitsLoss()
+
+# Common optimizer: Adam, SGD (can try others)
+optimizer = torch.optim.SGD(params=model.parameters(), lr=0.1)
+
+# Calculate accuracy - out of 100 examples, what percentage does the model succeed to predict?
+def accuracy_fn(y_true, y_pred):
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct/len(y_pred)) * 100
+    return acc
+
+model.eval()
+with torch.inference_mode():
+    y_logits = model(X_test.to(device))[:5]
+
+y_pred_prob = torch.sigmoid(y_logits)
+y_pred = torch.round(y_pred_prob)
+# print(f"Predictions: {list(item.item() for item in y_pred)}\nReal: {list(item.item() for item in y_test[:5])}")
+y_pred_labels = torch.round(torch.sigmoid(model(X_test.to(device))[:5]))
+# print(torch.eq(y_pred.squeeze(), y_pred_labels.squeeze()))
+'''
+Predictions: [0.0, 1.0, 0.0, 1.0, 0.0]
+Real: [1.0, 0.0, 1.0, 0.0, 1.0]
+tensor([True, True, True, True, True], device='cuda:0')
+'''
+
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+
+epochs = 1000
+
+X_train, y_train = X_train.to(device), y_train.to(device)
+X_test, y_test = X_test.to(device), y_test.to(device)
+
+for epoch in range(epochs):
+    # Training
+    model.train()
+    # Turning logits into pred_prob and then into pred
+    y_logits = model(X_train).squeeze()
+    y_pred = torch.round(torch.sigmoid(y_logits))
+    # Calculate the accuracy / loss
+    loss = loss_fn(y_logits, y_train)
+    accuracy = accuracy_fn(y_train, y_pred)
