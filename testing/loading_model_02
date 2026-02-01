@@ -1,0 +1,110 @@
+import torch
+import torch.nn as nn
+from sklearn.datasets import make_circles
+from sklearn.model_selection import train_test_split
+from pathlib import Path
+
+# Define the same model architecture
+class CircleModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer = nn.Sequential(
+            nn.Linear(2, 5),
+            nn.ReLU(),
+            nn.Linear(5, 1)
+        )
+
+    def forward(self, x):
+        return self.layer(x)
+
+# Accuracy function
+def accuracy_fn(y_true, y_pred):
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct/len(y_pred)) * 100
+    return acc
+
+# Create the same data
+n_samples = 1000
+X, y = make_circles(n_samples, noise=0.03, random_state=42)
+X = torch.from_numpy(X).type(torch.float)
+y = torch.from_numpy(y).type(torch.float)
+
+# Split data the same way
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Set device
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
+
+# Load the model
+MODEL_PATH = Path("models")
+MODEL_NAME = "02_classification.pt"
+MODEL_LOAD_PATH = MODEL_PATH / MODEL_NAME
+
+# Create model instance
+loaded_model = CircleModel().to(device)
+
+# Load the saved state dictionary
+if MODEL_LOAD_PATH.exists():
+    loaded_model.load_state_dict(torch.load(MODEL_LOAD_PATH))
+    print(f"✓ Model loaded successfully from {MODEL_LOAD_PATH}")
+else:
+    print(f"✗ Model file not found at {MODEL_LOAD_PATH}")
+    exit()
+
+# Move test data to device
+X_test, y_test = X_test.to(device), y_test.to(device)
+
+# Test the loaded model
+loaded_model.eval()
+with torch.inference_mode():
+    # Get predictions
+    test_logits = loaded_model(X_test).squeeze()
+    test_pred = torch.round(torch.sigmoid(test_logits))
+    
+    # Calculate loss and accuracy
+    loss_fn = nn.BCEWithLogitsLoss()
+    test_loss = loss_fn(test_logits, y_test)
+    test_acc = accuracy_fn(y_test, test_pred)
+    
+    print(f"\n{'='*50}")
+    print(f"MODEL EVALUATION RESULTS")
+    print(f"{'='*50}")
+    print(f"Test Loss: {test_loss:.5f}")
+    print(f"Test Accuracy: {test_acc:.2f}%")
+    print(f"{'='*50}")
+    
+    pred = 200
+    # Show some example predictions
+    print(f"\nFirst {pred} predictions vs actual:")
+    print(f"Predicted: {test_pred[:pred].cpu().numpy()}")
+    print(f"Actual:    {y_test[:pred].cpu().numpy()}")
+    
+    # Calculate how many correct
+    correct = torch.eq(y_test[:pred], test_pred[:pred]).sum().item()
+    print(f"Correct predictions in first {pred}: {correct}/{pred}")
+
+print(f"\n✓ Model testing complete!")
+
+'''
+Using device: cuda
+✓ Model loaded successfully from models\02_classification.pt
+
+==================================================
+MODEL EVALUATION RESULTS
+==================================================
+Test Loss: 0.03506
+Test Accuracy: 99.00%
+==================================================
+
+First 50 predictions vs actual:
+Predicted: [1. 0. 1. 0. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 0. 1. 1. 0. 1. 0. 0. 0. 1. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0.
+ 1. 1.]
+Actual:    [1. 0. 1. 0. 1. 1. 0. 0. 1. 0. 0. 1. 0. 1. 0. 1. 1. 0. 1. 0. 0. 0. 1. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0.
+ 1. 1.]
+Correct predictions in first 50: 49/50
+
+✓ Model testing complete!
+'''

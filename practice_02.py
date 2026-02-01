@@ -137,3 +137,10 @@ for epoch in range(epochs):
     # Print out result for 100 epochs
     if (epoch + 1) % 100 == 0:
         print(f"Epoch {epoch + 1} | Loss: {test_loss:.5f} | Accuracy: {test_acc:.5f} | Test Loss: {test_loss:.2f}%")
+from pathlib import Path
+if (input("save?").lower() == "y"):
+    MODEL_PATH = Path("models")
+    MODEL_PATH.mkdir(parents=True, exist_ok=True)
+    MODEL_NAME = "02_classification.pt"
+    MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
