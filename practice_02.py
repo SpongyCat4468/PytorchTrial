@@ -122,3 +122,20 @@ for epoch in range(epochs):
     # Calculate the accuracy / loss
     loss = loss_fn(y_logits, y_train)
     accuracy = accuracy_fn(y_train, y_pred)
+    # Optimizer zero grad
+    optimizer.zero_grad()
+    # Loss backward
+    loss.backward()
+    # Optimizer step
+    optimizer.step()
+
+    model.eval()
+    with torch.inference_mode():
+        test_logits = model(X_test).squeeze()
+        test_pred = torch.round(torch.sigmoid(test_logits))
+        test_loss = loss_fn(test_logits, y_test)
+        test_acc = accuracy_fn(y_test, test_pred)
+
+    # Print out result for 100 epochs
+    if (epochs + 1) % 100 == 0:
+        print(f"Epoch {epochs + 1} | Loss: {test_loss:.5f} | Accuracy: {test_acc:.5f} | Test Loss: {test_loss:.2f}%")
