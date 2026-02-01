@@ -9,9 +9,9 @@ class CircleModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.layer = nn.Sequential(
-            nn.Linear(2, 5),
+            nn.Linear(2, 32),
             nn.ReLU(),
-            nn.Linear(5, 1)
+            nn.Linear(32, 1)
         )
 
     def forward(self, x):
@@ -86,6 +86,16 @@ with torch.inference_mode():
 
 print(f"\n✓ Model testing complete!")
 
+from helper_functions import plot_predictions, plot_decision_boundary
+import matplotlib.pyplot as plt
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Train")
+plot_decision_boundary(loaded_model, X_train, y_train)
+plt.subplot(1, 2, 2)
+plt.title("Test")
+plot_decision_boundary(loaded_model, X_test, y_test)
+plt.show()
 '''
 Using device: cuda
 ✓ Model loaded successfully from models\02_classification.pt

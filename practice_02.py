@@ -48,9 +48,9 @@ class CircleModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.layer = nn.Sequential(
-            nn.Linear(2, 5),
+            nn.Linear(2, 32),
             nn.ReLU(),
-            nn.Linear(5, 1)
+            nn.Linear(32, 1)
         )
 
     def forward(self, x):
@@ -108,7 +108,7 @@ tensor([True, True, True, True, True], device='cuda:0')
 torch.manual_seed(67)
 torch.cuda.manual_seed(67)
 
-epochs = 20000
+epochs = 100000
 X_train, y_train = X_train.to(device), y_train.to(device)
 X_test, y_test = X_test.to(device), y_test.to(device)
 for epoch in range(epochs):
@@ -138,6 +138,26 @@ for epoch in range(epochs):
     if (epoch + 1) % 100 == 0:
         print(f"Epoch {epoch + 1} | Loss: {test_loss:.5f} | Accuracy: {test_acc:.5f} | Test Loss: {test_loss:.2f}%")
 from pathlib import Path
+import requests
+if Path("helper_functions.py").is_file():
+    print("helper_function.py already exists!")
+else:
+    print("downloading helper_function.py...")
+    request = requests.get("https://raw.githubusercontent.com/mrdbourke/pytorch-deep-learning/main/helper_functions.py")
+    with open("helper_functions.py", "wb") as f:
+        f.write(request.content)
+
+from helper_functions import plot_predictions, plot_decision_boundary
+import matplotlib.pyplot as plt
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Train")
+plot_decision_boundary(model, X_train, y_train)
+plt.subplot(1, 2, 2)
+plt.title("Test")
+plot_decision_boundary(model, X_test, y_test)
+plt.show()
+
 if (input("save?").lower() == "y"):
     MODEL_PATH = Path("models")
     MODEL_PATH.mkdir(parents=True, exist_ok=True)
