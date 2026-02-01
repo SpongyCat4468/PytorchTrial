@@ -48,9 +48,9 @@ class CircleModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.layer = nn.Sequential(
-            nn.Linear(2, 32),
+            nn.Linear(2, 5),
             nn.ReLU(),
-            nn.Linear(32, 1)
+            nn.Linear(5, 1)
         )
 
     def forward(self, x):
@@ -105,14 +105,12 @@ Real: [1.0, 0.0, 1.0, 0.0, 1.0]
 tensor([True, True, True, True, True], device='cuda:0')
 '''
 
-torch.manual_seed(42)
-torch.cuda.manual_seed(42)
+torch.manual_seed(67)
+torch.cuda.manual_seed(67)
 
-epochs = 1000
-
+epochs = 20000
 X_train, y_train = X_train.to(device), y_train.to(device)
 X_test, y_test = X_test.to(device), y_test.to(device)
-
 for epoch in range(epochs):
     # Training
     model.train()
@@ -137,5 +135,5 @@ for epoch in range(epochs):
         test_acc = accuracy_fn(y_test, test_pred)
 
     # Print out result for 100 epochs
-    if (epochs + 1) % 100 == 0:
-        print(f"Epoch {epochs + 1} | Loss: {test_loss:.5f} | Accuracy: {test_acc:.5f} | Test Loss: {test_loss:.2f}%")
+    if (epoch + 1) % 100 == 0:
+        print(f"Epoch {epoch + 1} | Loss: {test_loss:.5f} | Accuracy: {test_acc:.5f} | Test Loss: {test_loss:.2f}%")
