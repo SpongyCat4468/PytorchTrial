@@ -2,8 +2,7 @@ import torch.nn as nn
 import torch
 import matplotlib.pyplot as plt
 
-import torchvision
-from torchvision import datasets, transforms
+from torchvision import datasets
 from torchvision.transforms import ToTensor
 
 
