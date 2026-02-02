@@ -108,7 +108,7 @@ tensor([True, True, True, True, True], device='cuda:0')
 torch.manual_seed(67)
 torch.cuda.manual_seed(67)
 
-epochs = 100000
+epochs = 8000
 X_train, y_train = X_train.to(device), y_train.to(device)
 X_test, y_test = X_test.to(device), y_test.to(device)
 for epoch in range(epochs):
