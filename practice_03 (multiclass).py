@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
 import torch.nn as nn
+from pathlib import Path
 
 NUM_CLASSES = 4
 NUM_FEATURES = 2
@@ -100,3 +101,9 @@ from torchmetrics import Accuracy
 torch_accuracy = Accuracy('multiclass', num_classes=4).to(device)
 
 print(torch_accuracy(y_preds, y_blob_test).item())
+if (input("save?").lower() == "y"):
+    MODEL_PATH = Path("models")
+    MODEL_PATH.mkdir(parents=True, exist_ok=True)
+    MODEL_NAME = "03_multiclass.pt"
+    MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)

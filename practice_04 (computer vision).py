@@ -2,11 +2,17 @@ import torch.nn as nn
 import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader 
+from pathlib import Path
 
+from tqdm.auto import tqdm
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+from helper_functions import accuracy_fn
+
+from timeit import default_timer as timer
 
 # Preparing data
+device = "cuda" if torch.cuda.is_available else "cpu"
 train_data = datasets.FashionMNIST(root="data", train=True, download=True, transform=ToTensor(), target_transform=None)
 test_data = datasets.FashionMNIST(root="data", train=False, download=True, transform=ToTensor(), target_transform=None)
 '''
@@ -48,10 +54,10 @@ BATCH_SIZE = 32
 train_dataloader = DataLoader(train_data, BATCH_SIZE, shuffle=True)
 test_dataloader = DataLoader(test_data, BATCH_SIZE, shuffle=False) # dont shuffle -> easier to evaluate the model
 
-train_features_batch, train_label_batch = next(iter(train_dataloader))
 
 '''
 torch.manual_seed(67)
+train_features_batch, train_label_batch = next(iter(train_dataloader))
 random_idx = torch.randint(0, len(train_features_batch), size=[1]).item()
 img, label = train_features_batch[random_idx], train_label_batch[random_idx].item()
 plt.imshow(img.squeeze(), cmap="gray")
@@ -60,4 +66,96 @@ plt.axis(False)
 plt.show()
 '''
  
- 
+# Building a computer vision model
+# nn.Flatten() -> dim [color_channels, height, width] -> [color_channels, height*width]
+class ComputerVisonModel(nn.Module):
+    def __init__(self, input, output, hidden):
+        super().__init__()
+        self.layer = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(input, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, output),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        return self.layer(x)
+    
+def print_train_time(start: float, end: float) -> float:
+    total_time = end - start
+    print(f"Training time: {total_time:.3f} seconds")
+    return total_time
+torch.manual_seed(67)
+model = ComputerVisonModel(784, 10, 32).to(device)
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+
+epochs = 10
+torch.manual_seed(67)
+train_time_start = timer()
+for epoch in tqdm(range(epochs)):
+    print(f"\nEpoch: {epoch + 1}\n------")
+
+    train_loss = 0
+    for batch, (X, y) in enumerate(train_dataloader): # X -> image, y -> label
+        model.train()
+        y_pred = model(X.to(device))
+
+        loss = loss_fn(y_pred, y.to(device))
+        train_loss += loss
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if batch % 400 == 0:
+            print(f"Looked at {batch * len(X)}/{len(train_dataloader.dataset)} samples.")
+    train_loss /= len(train_dataloader)
+
+    test_loss, test_acc = 0, 0
+    model.eval()
+    with torch.inference_mode():
+        for X_test, y_test in test_dataloader:
+            # test_pred in format of logits
+            test_pred = model(X_test.to(device))
+            test_loss += loss_fn(test_pred, y_test.to(device))
+            test_acc += accuracy_fn(y_test.to(device), test_pred.argmax(dim=1))
+        # Calculate test loss average per batch
+        test_loss /= len(test_dataloader)
+        test_acc /= len(test_dataloader)
+    print(f"\nTrain Loss: {train_loss:.4f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.2f}%")
+train_time_end = timer()
+total_train_time = print_train_time(train_time_start, train_time_end)
+
+torch.manual_seed(42)
+def eval_model(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader, loss_fn: torch.nn.Module, device: str, accuracy_fn):
+    loss, acc = 0, 0
+    model.eval()
+    with torch.inference_mode():
+        for X, y in data_loader:
+            y_pred = model(X.to(device))
+
+            loss += loss_fn(y_pred, y.to(device))
+            acc += accuracy_fn(y.to(device), y_pred.argmax(dim=1))
+        
+        loss /= len(data_loader)
+        acc /= len(data_loader)
+    return {"model_name": model.__class__.__name__, 
+            "model_loss": loss.item(),
+            "model_acc": acc}
+
+model_results = eval_model(model, test_dataloader, loss_fn, device, accuracy_fn)
+for key, value in model_results.items():
+    print(f"\n{key}: {value}")
+
+
+if (input("save?").lower() == "y"):
+    MODEL_PATH = Path("models")
+    MODEL_PATH.mkdir(parents=True, exist_ok=True)
+    MODEL_NAME = "04_computer_vision.pt"
+    MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
+
+
+# 5 epochs: cpu time -> 33.463 seconds | gpu time -> 39.872 seconds
